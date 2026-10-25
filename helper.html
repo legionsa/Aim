@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Match Helper — legal untuk competitive</title>
+<style>
+:root { color-scheme: dark; }
+body { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#0e1116; color:#e6edf3; margin:0; padding:20px; }
+h1 { font-size:18px; margin:0 0 4px; }
+p.sub { color:#8b949e; font-size:13px; margin:0 0 16px; max-width:760px; }
+.wrap { display:flex; gap:20px; flex-wrap:wrap; }
+.card { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:14px; min-width:300px; max-width:380px; height:fit-content; }
+label { display:block; font-size:12px; margin:10px 0 4px; color:#8b949e; }
+input, select { width:100%; background:#0d1117; color:#e6edf3; border:1px solid #30363d; border-radius:6px; padding:6px; box-sizing:border-box; }
+.row { display:flex; gap:8px; } .row > div { flex:1; }
+button { background:#238636; color:#fff; border:0; border-radius:6px; padding:8px 10px; cursor:pointer; font-weight:700; margin-top:10px; width:100%; }
+button.ghost { background:#21262d; border:1px solid #30363d; }
+button.danger { background:#7a1f1f; }
+pre { background:#0d1117; border:1px solid #30363d; border-radius:6px; padding:10px; font-size:12px; white-space:pre-wrap; }
+.dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:4px; }
+.ok { color:#3fb950; } .warn { color:#d29922; }
+small { color:#8b949e; font-size:11px; }
+a { color:#79c0ff; }
+.rounds { display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; }
+.rounds span { width:22px; height:22px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+.w { background:#238636; } .l { background:#7a1f1f; }
+</style>
+</head>
+<body>
+<h1>Match Helper — manual, tidak baca game, tidak gerakkan mouse</h1>
+<p class="sub">Legal karena <b>pasif + manual</b>: kalkulator sens, catatan round yang kamu isi sendiri, timer istirahat, checklist warmup.
+Tidak inject, tidak overlay ke game, tidak automation. Buka di HP/browser kedua, bukan di atas game.<br>
+<a href="index.html">← Lab</a> · <a href="trainer.html">← Trainer warmup</a></p>
+<div class="wrap">
+
+<div class="card">
+<h3 style="margin:0">1. eDPI &amp; Sens Converter</h3>
+<label>Game asal</label>
+<select id="from">
+<option value="1">Valorant (ref)</option>
+<option value="3.18">CS2 (×3.18 dari Valo)</option>
+<option value="1">Apex (-mode, cek manual)</option>
+</select>
+<div class="row">
+<div><label>DPI mouse</label><input type="number" id="dpi" value="800" /></div>
+<div><label>Sens in-game</label><input type="number" id="sens" value="0.35" step="0.01" /></div>
+</div>
+<label>Game tujuan</label>
+<select id="to">
+<option value="3.18">CS2</option>
+<option value="1" selected>Valorant</option>
+</select>
+<button id="calc">Hitung</button>
+<pre id="edpi">—</pre>
+<small>eDPI = DPI × sens. Konversi antar game ≠ sempurna (beda FOV/hitbox). Pakai sebagai titik awal, lalu fine-tune 0.01 di range.</small>
+</div>
+
+<div class="card">
+<h3 style="margin:0">2. Round Tracker (isi manual)</h3>
+<small>Klik tiap round selesai. Murni catatan — tidak baca skor game otomatis.</small>
+<div class="row">
+<div><button id="win">+ Win</button></div>
+<div><button id="lose" class="danger">+ Loss</button></div>
+</div>
+<button id="undo" class="ghost">Undo</button>
+<button id="resetR" class="ghost">Reset</button>
+<div class="rounds" id="rounds"></div>
+<pre id="score">W 0 : 0 L</pre>
+<label>Catatan (eco musuh / pola / tilt)</label>
+<input type="text" id="note" placeholder="cth: R5 musuh force, Jett dash kanan" />
+<button id="saveNote" class="ghost">Simpan catatan</button>
+<pre id="notes">—</pre>
+</div>
+
+<div class="card">
+<h3 style="margin:0">3. Timer + Checklist</h3>
+<label>Break reminder (menit)</label>
+<input type="number" id="mins" value="45" min="5" max="180" />
+<button id="breakBtn">Mulai timer istirahat</button>
+<pre id="timer">—</pre>
+<label><input type="checkbox" class="ck" /> Aimlab/trainer 10 mnt (trainer.html)</label>
+<label><input type="checkbox" class="ck" /> Deathmatch 10 mnt — fokus crosshair placement</label>
+<label><input type="checkbox" class="ck" /> Spray 5 mnt — guide OFF, avg &lt; 30px</label>
+<label><input type="checkbox" class="ck" /> Air + postur + grip check</label>
+<label><input type="checkbox" class="ck" /> Review 1 VOD / demo sendiri</label>
+<button id="uncheck" class="ghost">Reset checklist</button>
+<pre id="legal">Yang LEGAL saat match: setting DPI/sens bawaan, catatan manual, timer, komunikasi voice, recording (OBS/ShadowPlay), stat tracker resmi/ seafood.
+Yang ILEGAL: recoil macro/script/AHK, triggerbot, aim assist, crosshair overlay eksternal, auto-spray, driver macro gameplay (termasuk G Hub/Synapse untuk recoil).</pre>
+
+<div class="card">
+<h3 style="margin:0">4. Display &amp; Enemy Visibility (legal, setting bawaan)</h3>
+<small>Semua ini setting resmi OS / monitor / in-game — tidak menyentuh file game.</small>
+<label>Preset buta warna (tiru di game)</label>
+<select id="cb">
+<option value="none">Normal — musuh merah, default</option>
+<option value="deutan">Deutan (hijau-lemah) — pakai kuning/ungu</option>
+<option value="protan">Protan (merah-lemah) — hindari merah, pakai kuning/cyan</option>
+<option value="tritan">Tritan (biru-lemah) — hindari biru, pakai merah/kuning</option>
+</select>
+<label><input type="checkbox" id="night" /> Simulasi: matikan vibrance (cek masih kelihatan?)</label>
+<button id="visGuide">Tampilkan panduan setting</button>
+<pre id="vis">—</pre>
+<small>Atur hue musuh di <a href="trainer.html">trainer.html</a> dulu sampai "pop", catat angkanya, lalu samakan di game.</small>
+</div>
+</div>
+
+</div>
+<script>
+const $ = id => document.getElementById(id);
+// 1. eDPI
+$('calc').onclick = () => {
+  const dpi = parseFloat($('dpi').value)||0, s = parseFloat($('sens').value)||0;
+  const f = parseFloat($('from').value), t = parseFloat($('to').value);
+  const edpi = dpi*s;
+  const cm360valo =  (12100/(dpi*s)); // aproksimasi Valorant cm/360
+  const target = (s*f/t);
+  $('edpi').textContent = `eDPI=${edpi.toFixed(0)}  (~${cm360valo.toFixed(1)} cm/360 di Valo)\nsens tujuan ≈ ${target.toFixed(3)}\nCatatan: verifikasi 10 flick di range, toleransi ±0.02.`;
+};
+// 2. rounds
+let hist = JSON.parse(localStorage.getItem('mh-rounds')||'[]');
+let notes = JSON.parse(localStorage.getItem('mh-notes')||'[]');
+function render(){
+  $('rounds').innerHTML = hist.map((r,i)=>`<span class="${r?'w':'l'}">${i+1}</span>`).join('');
+  const w = hist.filter(x=>x).length, l = hist.length-w;
+  $('score').textContent = `W ${w} : ${l} L  (${hist.length} rounds)`;
+  $('notes').textContent = notes.length? notes.map((n,i)=>`${i+1}. ${n}`).join('\n') : '—';
+  localStorage.setItem('mh-rounds', JSON.stringify(hist));
+  localStorage.setItem('mh-notes', JSON.stringify(notes));
+}
+$('win').onclick=()=>{hist.push(1);render();};
+$('lose').onclick=()=>{hist.push(0);render();};
+$('undo').onclick=()=>{hist.pop();render();};
+$('resetR').onclick=()=>{hist=[];render();};
+$('saveNote').onclick=()=>{ const v=$('note').value.trim(); if(v){notes.push(`R${hist.length+1}: ${v}`);$('note').value='';render();} };
+render();
+// 3. timer
+let tId=null;
+$('breakBtn').onclick=()=>{
+  clearInterval(tId);
+  let s=(parseFloat($('mins').value)||45)*60;
+  const t0=Date.now();
+  $('timer').textContent='timer jalan...';
+  try{ Notification.requestPermission(); }catch(e){}
+  tId=setInterval(()=>{
+    s--;
+    const m=Math.floor(s/60), ss=('0'+(s%60)).slice(-2);
+    $('timer').textContent=`istirahat dalam ${m}:${ss} — minum, lihat jauh 20 detik, goyang bahu.`;
+    if(s<=0){ clearInterval(tId); $('timer').textContent='WAKTUNYA ISTIRAHAT 5 menit.';
+      try{ new Notification('Istirahat', {body:'5 menit off-screen'}); }catch(e){}
+      try{ navigator.vibrate&&navigator.vibrate(200); }catch(e){} }
+  },1000);
+};
+$('uncheck').onclick=()=>{ document.querySelectorAll('.ck').forEach(c=>c.checked=false); };
+// 4. display & visibility guide (setting bawaan, bukan modifikasi game)
+$('visGuide').onclick=()=>{
+  const cb=$('cb').value, night=$('night').checked;
+  const enemy = cb==='none' ? 'Merah/kuning default (coba hue 0 atau 55 di trainer)' :
+    cb==='deutan' ? 'KUNING (hue ~55) atau UNGU (hue ~290) — hindari merah-hijau' :
+    cb==='protan' ? 'KUNING (hue ~55) atau CYAN (hue ~185) — hindari merah' :
+    'MERAH (hue ~0) atau KUNING (hue ~55) — hindari biru';
+  $('vis').textContent =
+`ENEMY HIGHLIGHT (in-game, legal):
+- Valorant: Settings → General → Enemy Highlight Color → ${enemy}
+- CS2: Settings → Game → HUD/ crosshair warna kontras; model musuh via setting resmi saja
+- Buta warna: aktifkan Tritan/Deutan/Protan mode bawaan game
+
+MONITOR/OS (tombol fisik monitor, legal):
+- Digital Vibrance (NVIDIA) / Saturation (AMD) +10..30 bertahap
+- Black Equalizer / Shadow Boost rendah-sedang (jangan max, washout)
+- Brightness ~ mata nyaman, Contrast 60-75, Sharpness default
+- Matikan filter biru/game-mode aneh saat match
+
+${night?'⚠ Mode low-vibrance AKTIF di simulasi — pastikan musuh masih pop. Kalau tenggelam, naikkan saturasi/outline.':''}
+CEK 30 DETIK: spawn range → lihat musuh jauh/dekat/latar gelap-terang.
+Lolos jika terlihat <0.3 detik tanpa dicari.`;
+};
+</script>
+</body>
+</html>

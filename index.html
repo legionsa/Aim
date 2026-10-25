@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recoil Macro Lab — R / D / aim</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#0e1116; color:#e6edf3; margin:0; padding:20px; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  p.sub { color:#8b949e; font-size:13px; margin:0 0 16px; }
+  .wrap { display:flex; gap:20px; flex-wrap:wrap; }
+  canvas { background:#161b22; border:1px solid #30363d; border-radius:8px; }
+  .panel { min-width:300px; max-width:380px; background:#161b22; border:1px solid #30363d; border-radius:8px; padding:14px; }
+  label { display:block; font-size:12px; margin:10px 0 4px; color:#8b949e; }
+  input[type=range] { width:100%; }
+  input[type=number], select { width:100%; background:#0d1117; color:#e6edf3; border:1px solid #30363d; border-radius:6px; padding:6px; }
+  .row { display:flex; gap:8px; }
+  .row > div { flex:1; }
+  button { background:#238636; color:#fff; border:0; border-radius:6px; padding:8px 10px; cursor:pointer; font-weight:700; margin-top:10px; width:100%; }
+  button.ghost { background:#21262d; border:1px solid #30363d; }
+  pre { background:#0d1117; border:1px solid #30363d; border-radius:6px; padding:10px; font-size:12px; white-space:pre-wrap; }
+  .legend { font-size:12px; color:#8b949e; margin-top:8px; }
+  .dot-r { color:#ff7b72; } .dot-d { color:#79c0ff; } .dot-a { color:#3fb950; }
+</style>
+</head>
+<body>
+<h1>Recoil Macro Lab</h1>
+<p class="sub">R(n) = Σ PATTERN[i] &nbsp;·&nbsp; D(n) = −k·R(n) + ε &nbsp;·&nbsp; aim(n) = (1−k)·R(n) + ε &nbsp;·&nbsp; spread(n) = s₀ + α·n</p>
+<div class="wrap">
+  <canvas id="c" width="600" height="600"></canvas>
+  <div class="panel">
+    <label>Pattern</label>
+    <select id="pat">
+      <option value="ak">AK — climb + sway kanan/kiri</option>
+      <option value="m4">M4 — vertikal stabil</option>
+      <option value="smg">SMG — kecil & nyebar</option>
+    </select>
+    <label>k kompensasi: <span id="kv">1.00</span> (1 = perfect, 0.85 = pro)</label>
+    <input type="range" id="k" min="0" max="1" step="0.01" value="1" />
+    <div class="row">
+      <div><label>s₀ base spread</label><input type="number" id="s0" value="0.5" step="0.1" /></div>
+      <div><label>α growth/shot</label><input type="number" id="alpha" value="0.15" step="0.05" /></div>
+      <div><label>shots</label><input type="number" id="shots" value="30" step="1" /></div>
+    </div>
+    <label><input type="checkbox" id="showR" checked /> tampilkan R(n) mentah (tanpa kompensasi)</label>
+    <button id="run">Simulasi spray</button>
+    <button id="anim" class="ghost">▶ Animasi per-shot</button>
+    <button id="exp" class="ghost">⬇ Export .json</button>
+    <button id="trainerBtn" style="background:#8957e5">🎯 Buka Trainer Manual (legal)</button>
+    <button id="helperBtn" class="ghost">📋 Match Helper (legal saat competitive)</button>
+    <pre id="stat">—</pre>
+    <div class="legend"><span class="dot-r">●</span> R(n) mentah &nbsp;<span class="dot-d">●</span> D(n) drag ideal &nbsp;<span class="dot-a">●</span> aim(n) hasil akhir</div>
+    <pre>// Rumus per shot n (0-indexed):
+// cumulative(n): [cx,cy] = Σ PATTERN[0..n-1]
+// dragX = -k*cx + eps, dragY = -k*cy + eps
+// eps = (Math.random()*2-1) * (s0 + α*n)</pre>
+  </div>
+</div>
+<script>
+// PATTERN[i] = (dx, dy) delta recoil per shot ke-i.
+function genAK(n){ const a=[]; for(let i=0;i<n;i++){ const dx = i<8? (Math.sin(i*1.2)*1.5) : (i<18? (i%2? 3.2:-3.0) : (Math.sin(i)*2.0)); const dy = 9 + Math.sin(i*0.7)*2.5 - i*0.08; a.push([dx,dy]); } return a; }
+function genM4(n){ const a=[]; for(let i=0;i<n;i++){ a.push([Math.sin(i*0.9)*1.2, 6.5 + Math.cos(i*0.5)*1.2]); } return a; }
+function genSMG(n){ const a=[]; for(let i=0;i<n;i++){ a.push([(Math.random()*2-1)*3, 3.5+Math.random()*2]); } return a; }
+
+function cumulative(pattern, n){ let cx=0, cy=0; for(let i=0;i<n;i++){ cx+=pattern[i][0]; cy+=pattern[i][1]; } return [cx,cy]; } // R(n)
+function spreadAt(s0, alpha, n){ return s0 + alpha*n; }
+function eps(sp){ return (Math.random()*2-1)*sp; }
+
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+const CX = c.width/2, CY = 120, SCALE = 1.0;
+
+function draw(result, showR){
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.strokeStyle='#30363d'; ctx.beginPath(); ctx.moveTo(CX,20); ctx.lineTo(CX,c.height-20); ctx.moveTo(20,CY); ctx.lineTo(c.width-20,CY); ctx.stroke();
+  ctx.fillStyle='#8b949e'; ctx.font='12px monospace'; ctx.fillText('center (0,0) = titik bidik awal', CX+8, CY-8);
+  if(showR){ ctx.fillStyle='#ff7b72'; result.raw.forEach(p=>{ ctx.beginPath(); ctx.arc(CX+p[0]*SCALE, CY+p[1]*SCALE, 3, 0, 7); ctx.fill(); }); }
+  ctx.fillStyle='#3fb950'; result.aim.forEach((p,i)=>{ ctx.beginPath(); ctx.arc(CX+p[0]*SCALE, CY+p[1]*SCALE, 3.5, 0, 7); ctx.fill(); if(i>0){ ctx.strokeStyle='#3fb95055'; ctx.beginPath(); ctx.moveTo(CX+result.aim[i-1][0]*SCALE, CY+result.aim[i-1][1]*SCALE); ctx.lineTo(CX+p[0]*SCALE, CY+p[1]*SCALE); ctx.stroke(); } });
+  // drag vector terakhir
+  const last = result.vectors[result.vectors.length-1];
+  if(last){ ctx.strokeStyle='#79c0ff'; ctx.beginPath(); ctx.moveTo(CX+last.rx, CY+last.ry); ctx.lineTo(CX+last.rx+last.dx, CY+last.ry+last.dy); ctx.stroke(); }
+}
+
+function simulate(){
+  const kind = document.getElementById('pat').value;
+  const k = parseFloat(document.getElementById('k').value);
+  const s0 = parseFloat(document.getElementById('s0').value);
+  const al = parseFloat(document.getElementById('alpha').value);
+  const N = parseInt(document.getElementById('shots').value, 10);
+  document.getElementById('kv').textContent = k.toFixed(2);
+  const P = kind==='ak'?genAK(N):kind==='m4'?genM4(N):genSMG(N);
+  window._lastPattern = P;
+  window._lastCfg = { pattern: kind, k, s0, alpha: al, shots: N };
+  const raw=[], aim=[], vectors=[];
+  for(let n=1;n<=N;n++){
+    const [cx,cy] = cumulative(P,n);          // R(n)
+    raw.push([cx,cy]);
+    const sp = spreadAt(s0,al,n);             // spread(n)
+    const ex = eps(sp), ey = eps(sp);
+    const dx = -k*cx + ex, dy = -k*cy + ey;   // D(n)
+    aim.push([(1-k)*cx + ex, (1-k)*cy + ey]); // R(n)+D(n)
+    vectors.push({rx:cx*SCALE, ry:cy*SCALE, dx:(dx-cx*0)*0+(-k*cx+ex-cx)*0, dy:0});
+    vectors[vectors.length-1] = {rx:cx, ry:cy, dx:-k*cx+ex-cx, dy:-k*cy+ey-cy};
+  }
+  const [fx,fy] = cumulative(P,N);
+  const fsp = spreadAt(s0,al,N);
+  document.getElementById('stat').textContent =
+    `shots=${N} k=${k.toFixed(2)} s0=${s0} α=${al}\nR(${N})  = [${fx.toFixed(1)}, ${fy.toFixed(1)}]\nD(${N})  = [${(-k*fx).toFixed(1)}, ${(-k*fy).toFixed(1)}] + ε\nspread(${N}) = ${fsp.toFixed(2)}px\nsisa miss ≈ (1-k)·|R| = ${((1-k)*Math.hypot(fx,fy)).toFixed(1)}px + jitter ±${fsp.toFixed(1)}`;
+  draw({raw, aim, vectors}, document.getElementById('showR').checked);
+  return {raw, aim, vectors};
+}
+
+let timer=null;
+document.getElementById('run').onclick = ()=>{ clearInterval(timer); simulate(); };
+document.getElementById('exp').onclick = ()=>{
+  simulate();
+  const payload = { ...window._lastCfg, deltas: window._lastPattern };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'pattern.json'; a.click();
+  URL.revokeObjectURL(a.href);
+};
+document.getElementById('k').oninput = (e)=>{ document.getElementById('kv').textContent = parseFloat(e.target.value).toFixed(2); };
+document.getElementById('trainerBtn').onclick = ()=>{ location.href='trainer.html'; };
+document.getElementById('helperBtn').onclick = ()=>{ location.href='helper.html'; };
+document.getElementById('anim').onclick = ()=>{
+  clearInterval(timer);
+  const kind = document.getElementById('pat').value;
+  const k = parseFloat(document.getElementById('k').value);
+  const s0 = parseFloat(document.getElementById('s0').value);
+  const al = parseFloat(document.getElementById('alpha').value);
+  const N = parseInt(document.getElementById('shots').value, 10);
+  const P = kind==='ak'?genAK(N):kind==='m4'?genM4(N):genSMG(N);
+  const raw=[], aim=[], vectors=[]; let n=1;
+  timer = setInterval(()=>{
+    if(n>N){ clearInterval(timer); return; }
+    const [cx,cy]=cumulative(P,n); raw.push([cx,cy]);
+    const sp=spreadAt(s0,al,n), ex=eps(sp), ey=eps(sp);
+    aim.push([(1-k)*cx+ex,(1-k)*cy+ey]); vectors.push({rx:cx,ry:cy,dx:-k*cx+ex-cx,dy:-k*cy+ey-cy});
+    draw({raw,aim,vectors}, document.getElementById('showR').checked);
+    n++;
+  }, 120);
+};
+simulate();
+</script>
+</body>
+</html>

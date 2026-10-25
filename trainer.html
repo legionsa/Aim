@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recoil Trainer — latihan manual (legal)</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#0e1116; color:#e6edf3; margin:0; padding:20px; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  p.sub { color:#8b949e; font-size:13px; margin:0 0 16px; max-width:720px; }
+  .wrap { display:flex; gap:20px; flex-wrap:wrap; }
+  canvas { background:#161b22; border:1px solid #30363d; border-radius:8px; cursor:crosshair; }
+  .panel { min-width:300px; max-width:380px; background:#161b22; border:1px solid #30363d; border-radius:8px; padding:14px; height:fit-content; }
+  label { display:block; font-size:12px; margin:10px 0 4px; color:#8b949e; }
+  input[type=number], select { width:100%; background:#0d1117; color:#e6edf3; border:1px solid #30363d; border-radius:6px; padding:6px; }
+  input[type=range] { width:100%; }
+  .row { display:flex; gap:8px; } .row > div { flex:1; }
+  button { background:#238636; color:#fff; border:0; border-radius:6px; padding:8px 10px; cursor:pointer; font-weight:700; margin-top:10px; width:100%; }
+  button.ghost { background:#21262d; border:1px solid #30363d; }
+  button.danger { background:#7a1f1f; }
+  pre { background:#0d1117; border:1px solid #30363d; border-radius:6px; padding:10px; font-size:12px; white-space:pre-wrap; }
+  .ok { color:#3fb950; } .warn { color:#d29922; } .bad { color:#ff7b72; }
+  details { font-size:12px; color:#8b949e; margin-top:8px; }
+  summary { cursor:pointer; }
+  a { color:#79c0ff; }
+</style>
+</head>
+<body>
+<h1>Recoil Trainer — 100% manual, legal untuk persiapan competitive</h1>
+<p class="sub">Trainer pasif standalone: <b>tidak menggerakkan mouse, tidak membaca game, tidak overlay ke game.</b>
+Recoil simulasi mendorong titik aim sebesar <b>R(n) = Σ PATTERN[i]</b> tiap tembakan.
+Kamu lawan manual dengan drag mouse: <b>U(n)</b> = total gerakanmu. Skor = <b>|R(n)+U(n)|</b> — makin dekat ke 0 makin bagus.
+Pakai sebagai <b>warmup sebelum ranked</b>, bukan dijalankan bersamaan dengan game.</p>
+<div class="wrap">
+  <canvas id="c" width="600" height="600"></canvas>
+  <div class="panel">
+    <label>Pattern</label>
+    <select id="pat">
+      <option value="ak">AK — climb + sway kanan/kiri</option>
+      <option value="m4">M4 — vertikal stabil</option>
+      <option value="smg">SMG — kecil &amp; nyebar</option>
+    </select>
+    <div class="row">
+      <div><label>shots</label><input type="number" id="shots" value="20" step="1" min="5" max="60" /></div>
+      <div><label>interval ms/shot</label><input type="number" id="interval" value="120" step="10" min="50" max="500" /></div>
+      <div><label>sens latih</label><input type="number" id="sens" value="1.0" step="0.1" min="0.3" max="3" /></div>
+    </div>
+    <label><input type="checkbox" id="guide" checked /> tampilkan panah guide (arah tarikan ideal)</label>
+    <label><input type="checkbox" id="ghost" checked /> tampilkan ghost merah = posisi tanpa kompensasi</label>
+    <label>🎨 Warna musuh (tengah) — hue: <span id="hueV">0</span>°</label>
+    <input type="range" id="hue" min="0" max="360" step="1" value="0" />
+    <div class="row">
+      <div><label>saturasi %</label><input type="number" id="sat" value="90" min="0" max="100" /></div>
+      <div><label>bg gelap-terang</label><input type="number" id="bg" value="22" min="5" max="90" /></div>
+      <div><label>outline px</label><input type="number" id="ol" value="2" min="0" max="6" /></div>
+    </div>
+    <div class="row">
+      <div><button id="presetR" class="ghost" style="font-size:11px">🔴 Merah default</button></div>
+      <div><button id="presetY" class="ghost" style="font-size:11px">🟡 Kuning buta-warna</button></div>
+      <div><button id="presetC" class="ghost" style="font-size:11px">🟣 Ungu Valorant</button></div>
+    </div>
+    <small>Tips: kuning di atas bg gelap = kontras tertinggi untuk kebanyakan mata. Coba preset lalu geser hue sampai musuh "pop". Setting ini hanya untuk kanvas latihan — tiru di setting game asli (enemy highlight).</small>
+    <button id="start">🎯 Mulai latihan (klik lalu tahan mouse di kanvas)</button>
+    <button id="stop" class="danger">■ Stop</button>
+    <button id="back" class="ghost">← Kembali ke Lab (index.html)</button>
+    <button id="helperBtn" class="ghost">📋 Match Helper</button>
+    <pre id="hud">— siap —&#10;1. Klik Mulai (ada hitung 3-2-1 + bunyi tick per shot).&#10;2. Tekan+tahan klik kiri di kanvas, tarik mouse melawan arah titik hijau.&#10;3. Tahan bidik sedekat mungkin ke tengah sampai spray selesai.</pre>
+    <pre id="best">best: —</pre>
+    <details>
+      <summary>Cara pakai untuk competitive (klik)</summary>
+      1. Latihan di sini 5–10 menit sebagai warmup — <b>jangan dibuka bersamaan dengan match ranked</b>.<br>
+      2. Target awal: rata-rata miss &lt; 30px dengan guide ON, lalu ulangi guide OFF.<br>
+      3. Naikkan difficulty: tambah shots, kecilkan interval, turunkan sens.<br>
+      4. Di game asli, terapkan tarikan yang sama secara manual. Tidak ada software yang jalan saat main → tidak ada pelanggaran ToS.<br>
+      5. Contoh rutin: 3x AK 20 shots guide ON → 3x guide OFF → 1x blind test.
+    </details>
+  </div>
+</div>
+<script>
+// PATTERN[i] = (dx, dy) — sama definisi dengan Lab.
+function genAK(n){ const a=[]; for(let i=0;i<n;i++){ const dx = i<8? (Math.sin(i*1.2)*1.5) : (i<18? (i%2? 3.2:-3.0) : (Math.sin(i)*2.0)); const dy = 9 + Math.sin(i*0.7)*2.5 - i*0.08; a.push([dx,dy]); } return a; }
+function genM4(n){ const a=[]; for(let i=0;i<n;i++){ a.push([Math.sin(i*0.9)*1.2, 6.5 + Math.cos(i*0.5)*1.2]); } return a; }
+function genSMG(n){ const a=[]; for(let i=0;i<n;i++){ a.push([(Math.random()*2-1)*3, 3.5+Math.random()*2]); } return a; }
+
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+const hud = document.getElementById('hud'), bestEl = document.getElementById('best');
+const CX = c.width/2, CY = 180;
+const R_EXCEL = 15, R_GOOD = 40; // toleransi px
+
+let P=[], N=0, idx=0, Rx=0, Ry=0, Ux=0, Uy=0;
+let running=false, dragging=false, shotTimer=null, raf=null;
+let dists=[], trail=[], startT=0;
+let AC=null;
+function beep(f){ try{ AC = AC || new (window.AudioContext||window.webkitAudioContext)(); const o=AC.createOscillator(), g=AC.createGain(); o.frequency.value=f; o.connect(g); g.connect(AC.destination); g.gain.value=0.08; o.start(); o.stop(AC.currentTime+0.06); }catch(e){} }
+
+// --- visibility / contrast musuh (murni kosmetik kanvas latihan) ---
+function visCfg(){
+  return {
+    h: parseInt((document.getElementById('hue')||{value:0}).value,10)||0,
+    s: parseInt((document.getElementById('sat')||{value:90}).value,10)||90,
+    bg: parseInt((document.getElementById('bg')||{value:22}).value,10)||22,
+    ol: parseInt((document.getElementById('ol')||{value:2}).value,10)||0
+  };
+}
+function enemyColor(v){ return `hsl(${v.h} 100% 60%)`; }
+function enemyGlow(v){ return `hsl(${v.h} 100% 60% / 0.35)`; }
+
+function draw(){
+  const v = visCfg();
+  // bg gelap-terang (hanya kanvas latihan)
+  ctx.fillStyle = `hsl(220 15% ${v.bg}%)`;
+  ctx.fillRect(0,0,c.width,c.height);
+  // grid + center
+  ctx.strokeStyle='#30363d'; ctx.beginPath(); ctx.moveTo(CX,20); ctx.lineTo(CX,c.height-20); ctx.moveTo(20,CY); ctx.lineTo(c.width-20,CY); ctx.stroke();
+  // zona toleransi
+  ctx.strokeStyle='#3fb95088'; ctx.beginPath(); ctx.arc(CX,CY,R_EXCEL,0,7); ctx.stroke();
+  ctx.strokeStyle='#d2992288'; ctx.beginPath(); ctx.arc(CX,CY,R_GOOD,0,7); ctx.stroke();
+  ctx.fillStyle='#8b949e'; ctx.font='12px monospace';
+  ctx.fillText('tengah = target (0,0)', CX+8, CY-8);
+  ctx.fillText('● hijau excellent ≤15px   ● kuning good ≤40px', 24, c.height-16);
+  // musuh (target tengah) — warna ikut hue slider
+  ctx.fillStyle = enemyGlow(v);
+  ctx.beginPath(); ctx.arc(CX,CY,14,0,7); ctx.fill();
+  ctx.fillStyle = enemyColor(v);
+  ctx.beginPath(); ctx.arc(CX,CY,8,0,7); ctx.fill();
+  if(v.ol>0){ ctx.strokeStyle='#fff'; ctx.lineWidth=v.ol; ctx.beginPath(); ctx.arc(CX,CY,8+v.ol,0,7); ctx.stroke(); ctx.lineWidth=1; }
+  ctx.fillStyle='#fff'; ctx.font='bold 10px monospace'; ctx.fillText('MUSUH', CX-18, CY+26);
+  // ghost recoil mentah R(n)
+  if(document.getElementById('ghost').checked && running){
+    ctx.fillStyle='#ff7b7255';
+    ctx.beginPath(); ctx.arc(CX+Rx, CY+Ry, 5, 0, 7); ctx.fill();
+  }
+  // trail aim
+  ctx.strokeStyle='#3fb95055'; ctx.beginPath();
+  trail.forEach((p,i)=>{ const x=CX+p[0], y=CY+p[1]; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.stroke();
+  // titik aim = R + U
+  const ax=CX+Rx+Ux, ay=CY+Ry+Uy;
+  const d=Math.hypot(Rx+Ux, Ry+Uy);
+  ctx.fillStyle = d<=R_EXCEL ? '#3fb950' : d<=R_GOOD ? '#d29922' : '#ff7b72';
+  ctx.beginPath(); ctx.arc(ax,ay,7,0,7); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.beginPath(); ctx.moveTo(ax-11,ay); ctx.lineTo(ax+11,ay); ctx.moveTo(ax,ay-11); ctx.lineTo(ax,ay+11); ctx.stroke();
+  // panah guide: dari aim ke tengah = -(R+U)
+  if(document.getElementById('guide').checked && running){
+    ctx.strokeStyle='#79c0ff'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(CX,CY); ctx.stroke(); ctx.lineWidth=1;
+    ctx.fillStyle='#79c0ff'; ctx.fillText(`tarik ${(-(Rx+Ux)).toFixed(0)},${(-(Ry+Uy)).toFixed(0)}`, ax+10, ay-10);
+  }
+  // counter
+  ctx.fillStyle='#e6edf3'; ctx.font='bold 20px monospace';
+  ctx.fillText(running ? `SHOT ${idx}/${N}` : '— idle —', 24, 40);
+  if(running){
+    const el=((performance.now()-startT)/1000).toFixed(1);
+    ctx.fillText(`${el}s  miss ${d.toFixed(0)}px`, 24, 66);
+  }
+}
+
+function loop(){ draw(); if(running) raf=requestAnimationFrame(loop); }
+function stopTimers(){ clearInterval(shotTimer); shotTimer=null; if(raf) cancelAnimationFrame(raf); raf=null; }
+
+function finish(manual){
+  if(!running) return;
+  running=false; stopTimers(); draw();
+  if(!dists.length){ hud.textContent='dibatalkan — belum ada shot tercatat.'; return; }
+  const avg=dists.reduce((a,b)=>a+b,0)/dists.length;
+  const mx=Math.max(...dists);
+  const ins=dists.filter(d=>d<=R_GOOD).length;
+  const pct=(100*ins/dists.length).toFixed(0);
+  const grade = avg<=15 ? 'S — pro' : avg<=30 ? 'A — bagus' : avg<=50 ? 'B — lumayan' : 'C — perlu latihan';
+  const key='recoil-trainer-best';
+  const prev=parseFloat(localStorage.getItem(key)||'9999');
+  let tag='';
+  if(avg<prev){ localStorage.setItem(key, avg.toFixed(1)); tag='  ★ NEW BEST'; }
+  bestEl.textContent=`best avg: ${Math.min(avg,prev).toFixed(1)}px (grade ${grade.split(' ')[0]})`;
+  hud.innerHTML=`selesai ${manual?'(manual stop)':''}\nshots=${N} avg miss=${avg.toFixed(1)}px max=${mx.toFixed(1)}px\ninside good-zone: ${ins}/${dists.length} (${pct}%)\ngrade: ${grade}${tag}\n\ntips: ${avg>50?'tarik lebih awal & halus, jangan patah-patah':avg>30?'stabil di 8 shot pertama, sway AK di shot 8-18':avg>15?'matikan guide, ulangi blind':'coba tambah shots / kecilkan interval'}`;
+}
+
+function start(){
+  stopTimers();
+  const kind=document.getElementById('pat').value;
+  N=Math.max(5,Math.min(60,parseInt(document.getElementById('shots').value,10)||20));
+  const iv=Math.max(50,Math.min(500,parseInt(document.getElementById('interval').value,10)||120));
+  P = kind==='ak'?genAK(N):kind==='m4'?genM4(N):genSMG(N);
+  idx=0; Rx=0; Ry=0; Ux=0; Uy=0; dists=[]; trail=[];
+  hud.textContent='bersiap... 3'; beep(440);
+  let cd=3;
+  const cdT=setInterval(()=>{
+    cd--;
+    if(cd>0){ hud.textContent=`bersiap... ${cd}`; beep(440); }
+    else{
+      clearInterval(cdT);
+      running=true; startT=performance.now();
+      hud.textContent='JALAN — tahan klik kiri & tarik melawan titik!';
+      beep(880); loop();
+      shotTimer=setInterval(()=>{
+        if(idx>=N){ finish(false); return; }
+        Rx+=P[idx][0]; Ry+=P[idx][1]; idx++;
+        const d=Math.hypot(Rx+Ux,Ry+Uy);
+        dists.push(d); trail.push([Rx+Ux,Ry+Uy]);
+        beep(660);
+      }, iv);
+    }
+  }, 600);
+}
+
+c.addEventListener('mousedown', e=>{ dragging=true; });
+window.addEventListener('mouseup', ()=>{ dragging=false; });
+c.addEventListener('mousemove', e=>{
+  if(!running || !dragging) return;
+  const s=parseFloat(document.getElementById('sens').value)||1.0;
+  Ux+=e.movementX*s; Uy+=e.movementY*s;
+  trail.push([Rx+Ux,Ry+Uy]);
+});
+c.addEventListener('contextmenu', e=>e.preventDefault());
+
+document.getElementById('start').onclick=start;
+document.getElementById('stop').onclick=()=>finish(true);
+document.getElementById('back').onclick=()=>{ location.href='index.html'; };
+document.getElementById('helperBtn').onclick=()=>{ location.href='helper.html'; };
+// --- preset visibilitas + persist ---
+function setVis(h,s,bg,ol){
+  document.getElementById('hue').value=h; document.getElementById('sat').value=s;
+  document.getElementById('bg').value=bg; document.getElementById('ol').value=ol;
+  document.getElementById('hueV').textContent=h;
+  localStorage.setItem('recoil-vis', JSON.stringify({h,s,bg,ol}));
+  draw();
+}
+document.getElementById('hue').oninput=e=>{ document.getElementById('hueV').textContent=e.target.value; draw(); };
+['sat','bg','ol'].forEach(id=>{ document.getElementById(id).oninput=()=>draw(); });
+document.getElementById('presetR').onclick=()=>setVis(0,90,22,2);
+document.getElementById('presetY').onclick=()=>setVis(55,100,14,3);
+document.getElementById('presetC').onclick=()=>setVis(290,95,18,2);
+(function(){
+  const b=localStorage.getItem('recoil-trainer-best'); bestEl.textContent = b?`best avg: ${b}px`:'best: —';
+  try{ const v=JSON.parse(localStorage.getItem('recoil-vis')||'null'); if(v) setVis(v.h,v.s,v.bg,v.ol); }catch(e){}
+})();
+draw();
+</script>
+</body>
+</html>
