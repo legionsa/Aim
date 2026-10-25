@@ -13,34 +13,39 @@ p.sub { color:#8b949e; font-size:13px; margin:0 0 16px; max-width:760px; }
 .card { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:14px; min-width:300px; max-width:380px; height:fit-content; }
 label { display:block; font-size:12px; margin:10px 0 4px; color:#8b949e; }
 input, select { width:100%; background:#0d1117; color:#e6edf3; border:1px solid #30363d; border-radius:6px; padding:6px; box-sizing:border-box; }
+input[type=range] { width:100%; }
 .row { display:flex; gap:8px; } .row > div { flex:1; }
 button { background:#238636; color:#fff; border:0; border-radius:6px; padding:8px 10px; cursor:pointer; font-weight:700; margin-top:10px; width:100%; }
 button.ghost { background:#21262d; border:1px solid #30363d; }
 button.danger { background:#7a1f1f; }
+button.sm { font-size:11px; padding:6px; }
 pre { background:#0d1117; border:1px solid #30363d; border-radius:6px; padding:10px; font-size:12px; white-space:pre-wrap; }
-.dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:4px; }
-.ok { color:#3fb950; } .warn { color:#d29922; }
 small { color:#8b949e; font-size:11px; }
 a { color:#79c0ff; }
 .rounds { display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; }
 .rounds span { width:22px; height:22px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
 .w { background:#238636; } .l { background:#7a1f1f; }
+canvas.mini { width:100%; border:1px solid #30363d; border-radius:6px; background:#0d1117; }
+.flash { font-size:20px; text-align:center; padding:18px 10px; background:#0d1117; border:1px solid #30363d; border-radius:6px; min-height:64px; display:flex; align-items:center; justify-content:center; margin-top:8px; }
+.kv { display:flex; justify-content:space-between; font-size:12px; padding:2px 0; border-bottom:1px solid #21262d; }
+.kv b { color:#e6edf3; }
+.hist { font-size:11px; max-height:120px; overflow-y:auto; }
 </style>
 </head>
 <body>
 <h1>Match Helper — manual, tidak baca game, tidak gerakkan mouse</h1>
-<p class="sub">Legal karena <b>pasif + manual</b>: kalkulator sens, catatan round yang kamu isi sendiri, timer istirahat, checklist warmup.
-Tidak inject, tidak overlay ke game, tidak automation. Buka di HP/browser kedua, bukan di atas game.<br>
+<p class="sub">Legal karena <b>pasif + manual</b>: semua diisi/diklik sendiri, tidak inject, tidak overlay ke game, tidak automation.
+Buka di HP/browser kedua, bukan di atas game.<br>
 <a href="index.html">← Lab</a> · <a href="trainer.html">← Trainer warmup</a></p>
 <div class="wrap">
 
+<!-- 1 -->
 <div class="card">
 <h3 style="margin:0">1. eDPI &amp; Sens Converter</h3>
 <label>Game asal</label>
 <select id="from">
 <option value="1">Valorant (ref)</option>
 <option value="3.18">CS2 (×3.18 dari Valo)</option>
-<option value="1">Apex (-mode, cek manual)</option>
 </select>
 <div class="row">
 <div><label>DPI mouse</label><input type="number" id="dpi" value="800" /></div>
@@ -53,12 +58,13 @@ Tidak inject, tidak overlay ke game, tidak automation. Buka di HP/browser kedua,
 </select>
 <button id="calc">Hitung</button>
 <pre id="edpi">—</pre>
-<small>eDPI = DPI × sens. Konversi antar game ≠ sempurna (beda FOV/hitbox). Pakai sebagai titik awal, lalu fine-tune 0.01 di range.</small>
+<small>eDPI = DPI × sens. Titik awal saja — fine-tune ±0.02 di range.</small>
 </div>
 
+<!-- 2 -->
 <div class="card">
 <h3 style="margin:0">2. Round Tracker (isi manual)</h3>
-<small>Klik tiap round selesai. Murni catatan — tidak baca skor game otomatis.</small>
+<small>Klik tiap round selesai. Murni catatan.</small>
 <div class="row">
 <div><button id="win">+ Win</button></div>
 <div><button id="lose" class="danger">+ Loss</button></div>
@@ -73,60 +79,182 @@ Tidak inject, tidak overlay ke game, tidak automation. Buka di HP/browser kedua,
 <pre id="notes">—</pre>
 </div>
 
+<!-- 3 -->
 <div class="card">
 <h3 style="margin:0">3. Timer + Checklist</h3>
 <label>Break reminder (menit)</label>
 <input type="number" id="mins" value="45" min="5" max="180" />
 <button id="breakBtn">Mulai timer istirahat</button>
 <pre id="timer">—</pre>
-<label><input type="checkbox" class="ck" /> Aimlab/trainer 10 mnt (trainer.html)</label>
-<label><input type="checkbox" class="ck" /> Deathmatch 10 mnt — fokus crosshair placement</label>
+<label><input type="checkbox" class="ck" /> Aimlab/trainer 10 mnt</label>
+<label><input type="checkbox" class="ck" /> Deathmatch 10 mnt — crosshair placement</label>
 <label><input type="checkbox" class="ck" /> Spray 5 mnt — guide OFF, avg &lt; 30px</label>
 <label><input type="checkbox" class="ck" /> Air + postur + grip check</label>
-<label><input type="checkbox" class="ck" /> Review 1 VOD / demo sendiri</label>
+<label><input type="checkbox" class="ck" /> Review 1 VOD sendiri</label>
 <button id="uncheck" class="ghost">Reset checklist</button>
-<pre id="legal">Yang LEGAL saat match: setting DPI/sens bawaan, catatan manual, timer, komunikasi voice, recording (OBS/ShadowPlay), stat tracker resmi/ seafood.
-Yang ILEGAL: recoil macro/script/AHK, triggerbot, aim assist, crosshair overlay eksternal, auto-spray, driver macro gameplay (termasuk G Hub/Synapse untuk recoil).</pre>
+</div>
 
+<!-- 4 -->
 <div class="card">
-<h3 style="margin:0">4. Display &amp; Enemy Visibility (legal, setting bawaan)</h3>
-<small>Semua ini setting resmi OS / monitor / in-game — tidak menyentuh file game.</small>
-<label>Preset buta warna (tiru di game)</label>
+<h3 style="margin:0">4. Display &amp; Enemy Visibility</h3>
+<small>Setting resmi OS/monitor/in-game saja.</small>
+<label>Preset buta warna</label>
 <select id="cb">
-<option value="none">Normal — musuh merah, default</option>
-<option value="deutan">Deutan (hijau-lemah) — pakai kuning/ungu</option>
-<option value="protan">Protan (merah-lemah) — hindari merah, pakai kuning/cyan</option>
-<option value="tritan">Tritan (biru-lemah) — hindari biru, pakai merah/kuning</option>
+<option value="none">Normal — merah default</option>
+<option value="deutan">Deutan (hijau-lemah) — kuning/ungu</option>
+<option value="protan">Protan (merah-lemah) — kuning/cyan</option>
+<option value="tritan">Tritan (biru-lemah) — merah/kuning</option>
 </select>
-<label><input type="checkbox" id="night" /> Simulasi: matikan vibrance (cek masih kelihatan?)</label>
 <button id="visGuide">Tampilkan panduan setting</button>
 <pre id="vis">—</pre>
-<small>Atur hue musuh di <a href="trainer.html">trainer.html</a> dulu sampai "pop", catat angkanya, lalu samakan di game.</small>
+<small>Atur hue musuh di <a href="trainer.html">trainer</a> dulu, catat angka, samakan di game.</small>
 </div>
+
+<!-- 5 -->
+<div class="card">
+<h3 style="margin:0">5. Crosshair Preview + Generator</h3>
+<canvas id="xhair" class="mini" width="340" height="160"></canvas>
+<div class="row">
+<div><label>warna</label><input type="color" id="xc" value="#00ff88" /></div>
+<div><label>panjang</label><input type="number" id="xl" value="8" min="0" max="30" /></div>
+<div><label>tebal</label><input type="number" id="xt" value="2" min="1" max="8" /></div>
+</div>
+<div class="row">
+<div><label>gap</label><input type="number" id="xg" value="4" min="0" max="20" /></div>
+<div><label>dot</label><select id="xd"><option value="0">off</option><option value="1">on</option></select></div>
+<div><label>outline</label><select id="xo"><option value="1">on</option><option value="0">off</option></select></div>
+</div>
+<button id="xcopy" class="ghost">📋 Copy setting (tempel manual di game)</button>
+<pre id="xout">—</pre>
+<small>Preview di sini, lalu ketik manual di setting game. Bukan overlay.</small>
+</div>
+
+<!-- 6 -->
+<div class="card">
+<h3 style="margin:0">6. Economy Calculator</h3>
+<label>Game</label>
+<select id="ecoGame"><option value="valo">Valorant</option><option value="cs">CS2</option></select>
+<div class="row">
+<div><label>credit tim rata2</label><input type="number" id="creds" value="2500" step="100" /></div>
+<div><label>loss streak</label><input type="number" id="streak" value="0" min="0" max="5" /></div>
+</div>
+<div class="row">
+<div><label>menang round ini?</label><select id="ecoW"><option value="1">ya</option><option value="0">tidak</option></select></div>
+<div><label>sisa round reguler</label><input type="number" id="ecoR" value="10" min="0" max="24" /></div>
+</div>
+<button id="ecoBtn">Saran buy</button>
+<pre id="ecoOut">—</pre>
+<small>Heuristik sederhana — keputusan final tetap baca situasi (musuh force? OT?).</small>
+</div>
+
+<!-- 7 -->
+<div class="card">
+<h3 style="margin:0">7. Map Callout Flashcards</h3>
+<label>Map</label>
+<select id="mapSel">
+<option value="ascent">Ascent</option>
+<option value="bind">Bind</option>
+<option value="haven">Haven</option>
+<option value="mirage">Mirage (CS2)</option>
+<option value="inferno">Inferno (CS2)</option>
+</select>
+<div class="flash" id="flashQ">Klik "Kartu baru"</div>
+<button id="flashNew">Kartu baru</button>
+<button id="flashFlip" class="ghost">Balik (lihat jawaban)</button>
+<div class="row">
+<div><button id="flashOk" class="sm">✅ Benar</button></div>
+<div><button id="flashNo" class="sm danger">❌ Salah</button></div>
+</div>
+<pre id="flashScore">skor: —</pre>
+</div>
+
+<!-- 8 -->
+<div class="card">
+<h3 style="margin:0">8. Reaction Test</h3>
+<canvas id="react" class="mini" width="340" height="160"></canvas>
+<button id="reactBtn">Mulai tes (5x klik secepatnya)</button>
+<pre id="reactOut">Klik mulai → tunggu hijau → klik kanvas secepatnya.</pre>
+</div>
+
+<!-- 9 -->
+<div class="card">
+<h3 style="margin:0">9. Tilt Journal</h3>
+<label>Level tilt 1-5</label>
+<input type="range" id="tilt" min="1" max="5" value="2" />
+<div class="kv"><span>level</span><b id="tiltV">2</b></div>
+<label>Trigger</label>
+<select id="tiltWhy">
+<option>kalah duel beruntun</option>
+<option>tim tidak kompak</option>
+<option>musuh smurf / curiga</option>
+<option>lag / FPS drop</option>
+<option>capek / lapar</option>
+<option>lainnya</option>
+</select>
+<label>Catatan</label>
+<input type="text" id="tiltNote" placeholder="cth: 3x kalah Jett diff, mulai maksa peek" />
+<button id="tiltSave">Simpan entry</button>
+<pre id="tiltOut">—</pre>
+<div class="hist" id="tiltHist"></div>
+</div>
+
+<!-- 10 -->
+<div class="card">
+<h3 style="margin:0">10. Warmup Routine Generator</h3>
+<label>Waktu tersedia (menit)</label>
+<input type="number" id="wuMin" value="15" min="5" max="60" />
+<button id="wuGen">Acak rutinitas</button>
+<pre id="wuOut">—</pre>
+<small>Pool: trainer.html, DM, spray guide OFF, counter-strafe, VOD 1 round.</small>
+</div>
+
+<!-- 11 -->
+<div class="card">
+<h3 style="margin:0">11. VOD Review Template</h3>
+<label>Round / timestamp</label>
+<input type="text" id="vodR" placeholder="cth: Ascent R7, 12:30" />
+<label>Kategori kesalahan (centang yg terjadi)</label>
+<label><input type="checkbox" class="vod" value="aim" /> aim — flick telat / overflick</label>
+<label><input type="checkbox" class="vod" value="crosshair" /> crosshair placement — terlalu bawah/dinding</label>
+<label><input type="checkbox" class="vod" value="posisi" /> posisi — peek tanpa info / off-angle buruk</label>
+<label><input type="checkbox" class="vod" value="util" /> utility — timing/salah lempar</label>
+<label><input type="checkbox" class="vod" value="komunikasi" /> komunikasi — info telat / tidak call</label>
+<label><input type="checkbox" class="vod" value="ekonomi" /> ekonomi — force tidak perlu</label>
+<label>Perbaikan 1 kalimat</label>
+<input type="text" id="vodFix" placeholder="cth: pre-aim sudut kanan sebelum swing" />
+<button id="vodSave">Simpan review</button>
+<button id="vodExport" class="ghost">📋 Copy semua (paste ke notepad)</button>
+<pre id="vodOut">—</pre>
+<div class="hist" id="vodHist"></div>
+</div>
+
+<div class="card">
+<h3 style="margin:0">Legalitas</h3>
+<pre>LEGAL saat match: setting DPI/sens bawaan, catatan manual, timer, voice, recording (OBS/ShadowPlay), stat tracker resmi.
+ILEGAL: recoil macro/script/AHK, triggerbot, aim assist, crosshair overlay eksternal, auto-spray, driver macro gameplay (termasuk G Hub/Synapse untuk recoil).</pre>
 </div>
 
 </div>
 <script>
 const $ = id => document.getElementById(id);
-// 1. eDPI
+const load = (k,d) => { try{ const v=JSON.parse(localStorage.getItem(k)); return v??d; }catch(e){ return d; } };
+const save = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+
+// ---- 1. eDPI ----
 $('calc').onclick = () => {
   const dpi = parseFloat($('dpi').value)||0, s = parseFloat($('sens').value)||0;
   const f = parseFloat($('from').value), t = parseFloat($('to').value);
-  const edpi = dpi*s;
-  const cm360valo =  (12100/(dpi*s)); // aproksimasi Valorant cm/360
-  const target = (s*f/t);
-  $('edpi').textContent = `eDPI=${edpi.toFixed(0)}  (~${cm360valo.toFixed(1)} cm/360 di Valo)\nsens tujuan ≈ ${target.toFixed(3)}\nCatatan: verifikasi 10 flick di range, toleransi ±0.02.`;
+  const edpi = dpi*s, cm360 = 12100/(dpi*s||1), target = s*f/t;
+  $('edpi').textContent = `eDPI=${edpi.toFixed(0)}  (~${cm360.toFixed(1)} cm/360 di Valo)\nsens tujuan ≈ ${target.toFixed(3)}\nVerifikasi 10 flick di range, toleransi ±0.02.`;
 };
-// 2. rounds
-let hist = JSON.parse(localStorage.getItem('mh-rounds')||'[]');
-let notes = JSON.parse(localStorage.getItem('mh-notes')||'[]');
+// ---- 2. rounds ----
+let hist = load('mh-rounds',[]), notes = load('mh-notes',[]);
 function render(){
   $('rounds').innerHTML = hist.map((r,i)=>`<span class="${r?'w':'l'}">${i+1}</span>`).join('');
-  const w = hist.filter(x=>x).length, l = hist.length-w;
-  $('score').textContent = `W ${w} : ${l} L  (${hist.length} rounds)`;
+  const w = hist.filter(x=>x).length;
+  $('score').textContent = `W ${w} : ${hist.length-w} L  (${hist.length} rounds)`;
   $('notes').textContent = notes.length? notes.map((n,i)=>`${i+1}. ${n}`).join('\n') : '—';
-  localStorage.setItem('mh-rounds', JSON.stringify(hist));
-  localStorage.setItem('mh-notes', JSON.stringify(notes));
+  save('mh-rounds',hist); save('mh-notes',notes);
 }
 $('win').onclick=()=>{hist.push(1);render();};
 $('lose').onclick=()=>{hist.push(0);render();};
@@ -134,27 +262,24 @@ $('undo').onclick=()=>{hist.pop();render();};
 $('resetR').onclick=()=>{hist=[];render();};
 $('saveNote').onclick=()=>{ const v=$('note').value.trim(); if(v){notes.push(`R${hist.length+1}: ${v}`);$('note').value='';render();} };
 render();
-// 3. timer
+// ---- 3. timer ----
 let tId=null;
 $('breakBtn').onclick=()=>{
   clearInterval(tId);
   let s=(parseFloat($('mins').value)||45)*60;
-  const t0=Date.now();
   $('timer').textContent='timer jalan...';
   try{ Notification.requestPermission(); }catch(e){}
   tId=setInterval(()=>{
     s--;
-    const m=Math.floor(s/60), ss=('0'+(s%60)).slice(-2);
-    $('timer').textContent=`istirahat dalam ${m}:${ss} — minum, lihat jauh 20 detik, goyang bahu.`;
+    $('timer').textContent=`istirahat dalam ${Math.floor(s/60)}:${('0'+(s%60)).slice(-2)} — minum, lihat jauh 20 detik.`;
     if(s<=0){ clearInterval(tId); $('timer').textContent='WAKTUNYA ISTIRAHAT 5 menit.';
-      try{ new Notification('Istirahat', {body:'5 menit off-screen'}); }catch(e){}
-      try{ navigator.vibrate&&navigator.vibrate(200); }catch(e){} }
+      try{ new Notification('Istirahat',{body:'5 menit off-screen'}); }catch(e){} }
   },1000);
 };
 $('uncheck').onclick=()=>{ document.querySelectorAll('.ck').forEach(c=>c.checked=false); };
-// 4. display & visibility guide (setting bawaan, bukan modifikasi game)
+// ---- 4. visibility ----
 $('visGuide').onclick=()=>{
-  const cb=$('cb').value, night=$('night').checked;
+  const cb=$('cb').value;
   const enemy = cb==='none' ? 'Merah/kuning default (coba hue 0 atau 55 di trainer)' :
     cb==='deutan' ? 'KUNING (hue ~55) atau UNGU (hue ~290) — hindari merah-hijau' :
     cb==='protan' ? 'KUNING (hue ~55) atau CYAN (hue ~185) — hindari merah' :
@@ -162,19 +287,130 @@ $('visGuide').onclick=()=>{
   $('vis').textContent =
 `ENEMY HIGHLIGHT (in-game, legal):
 - Valorant: Settings → General → Enemy Highlight Color → ${enemy}
-- CS2: Settings → Game → HUD/ crosshair warna kontras; model musuh via setting resmi saja
-- Buta warna: aktifkan Tritan/Deutan/Protan mode bawaan game
-
-MONITOR/OS (tombol fisik monitor, legal):
-- Digital Vibrance (NVIDIA) / Saturation (AMD) +10..30 bertahap
-- Black Equalizer / Shadow Boost rendah-sedang (jangan max, washout)
-- Brightness ~ mata nyaman, Contrast 60-75, Sharpness default
-- Matikan filter biru/game-mode aneh saat match
-
-${night?'⚠ Mode low-vibrance AKTIF di simulasi — pastikan musuh masih pop. Kalau tenggelam, naikkan saturasi/outline.':''}
-CEK 30 DETIK: spawn range → lihat musuh jauh/dekat/latar gelap-terang.
-Lolos jika terlihat <0.3 detik tanpa dicari.`;
+- CS2: setting resmi HUD/crosshair kontras saja
+MONITOR (tombol fisik, legal):
+- Digital Vibrance +10..30 bertahap, Black Equalizer rendah-sedang
+- Contrast 60-75, matikan filter biru saat match
+CEK 30 DETIK di range: lolos jika terlihat <0.3 detik.`;
 };
+// ---- 5. crosshair ----
+const xc = $('xhair').getContext('2d');
+function drawX(){
+  const L=+$('xl').value||0, T=+$('xt').value||2, G=+$('xg').value||0;
+  const col=$('xc').value, dot=$('xd').value==='1', ol=$('xo').value==='1';
+  const W=340,H=160,cx0=W/2,cy0=H/2;
+  xc.clearRect(0,0,W,H);
+  xc.strokeStyle='#333'; for(let x=0;x<W;x+=20){xc.beginPath();xc.moveTo(x,0);xc.lineTo(x,H);xc.stroke();}
+  xc.fillStyle=col;
+  const bar=(x,y,w,h)=>{ if(ol){xc.fillStyle='#000';xc.fillRect(x-1,y-1,w+2,h+2);xc.fillStyle=col;} xc.fillRect(x,y,w,h); };
+  bar(cx0-L-G,cy0-T/2,L,T); bar(cx0+G,cy0-T/2,L,T);
+  bar(cx0-T/2,cy0-L-G,T,L); bar(cx0-T/2,cy0+G,T,L);
+  if(dot){ const d=T+2; bar(cx0-d/2,cy0-d/2,d,d); }
+  const code=`VALORANT (ketik manual di Settings→Crosshair): Color=${col} | Inner Length=${L} Thickness=${T} Gap=${G} Dot=${dot?'ON':'OFF'} Outline=${ol?'ON':'OFF'}\nCS2 (console, ketik manual): cl_crosshaircolor 5; cl_crosshaircolor_r ${parseInt(col.slice(1,3),16)}; cl_crosshaircolor_g ${parseInt(col.slice(3,5),16)}; cl_crosshaircolor_b ${parseInt(col.slice(5,7),16)}; cl_crosshairsize ${L}; cl_crosshairthickness ${T}; cl_crosshairgap ${G}; cl_crosshairdot ${dot?1:0}; cl_crosshair_drawoutline ${ol?1:0}`;
+  $('xout').textContent=code;
+  return code;
+}
+['xl','xt','xg','xc','xd','xo'].forEach(id=>$(id).oninput=drawX);
+drawX();
+$('xcopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(drawX()); $('xcopy').textContent='✅ Copied — tempel manual di game'; }catch(e){ prompt('Copy manual:',drawX()); } setTimeout(()=>$('xcopy').textContent='📋 Copy setting (tempel manual di game)',1500); };
+// ---- 6. economy ----
+$('ecoBtn').onclick=()=>{
+  const g=$('ecoGame').value, c=+$('creds').value||0, st=+$('streak').value||0, w=$('ecoW').value==='1', r=+$('ecoR').value||0;
+  const full = g==='valo'? 4500 : 5500;   // aproksimasi full-buy
+  const nextBonus = g==='valo' ? Math.min(1900+st*500,3400) : Math.min(1900+st*500,3400);
+  let saran, alasan;
+  if(c>=full){ saran='FULL BUY'; alasan=`credit ${c} ≥ ${full}. Beli rifle+armor+util penuh.`; }
+  else if(c>=full*0.6 && (w||r>6)){ saran='FORCE (situasional)'; alasan=`credit ${c} cukup setengah. Force hanya jika menang momentum atau sisa round banyak (${r}).`; }
+  else if(c+nextBonus>=full){ saran='SAVE / HALF-BUY'; alasan=`kalah ini masih dapat bonus ~${nextBonus} → total ~${c+nextBonus}. Tahan, full-buy round depan.`; }
+  else { saran='ECO PENUH'; alasan=`credit ${c} terlalu kecil. Pistol/armor ringan saja, stack 1 site.`; }
+  $('ecoOut').textContent=`${saran}\n${alasan}\nnext loss-bonus ≈ ${nextBonus} | round tersisa ${r}`;
+};
+// ---- 7. flashcards ----
+const CALLOUTS = {
+  ascent:[['A Main','jalan utama attacker ke A'],['A Lobby','area sebelum A main'],['Tree','koridor A ke mid'],['Catwalk','jalan atas mid ke A'],['Mid Bottom','bawah mid dekat defender'],['Top Mid','atas mid'],['Pizza','sudut mid dekat defender'],['B Main','jalan utama ke B'],['B Lobby','sebelum B main'],['Market','tengah antara B dan mid'],['Boat','bawah B dekat air'],['Switch','ruang ganti dekat B'],['Wine','sudut B dekat defender'],['Garden','taman A site'],['Hell','bawah A site'],['Heaven','atas A site'],['Rafters','atas B site'],['CT','spawn defender']],
+  bind:[['A Short','jalan pendek ke A'],['A Long','jalan panjang ke A'],['Showers','koridor air ke A'],['U Hall','lorong atas mid'],['Hookah','ruang jendela ke B'],['B Long','jalan panjang ke B'],['B Short','jalan pendek/cubby ke B'],['Garden B','taman site B'],['CT','spawn defender'],['Teleporter A','pintu teleport A'],['Teleporter B','pintu teleport B'],['Cage','sangkar mid'],['Triple','tiga box A site'],['Back Site B','belakang site B']],
+  haven:[['A Long','jalan panjang ke A'],['A Short','jalan pendek/sewer ke A'],['Sewer','terowongan ke A/C'],['Mid','tengah 3 jalur'],['Window','jendela mid'],['Garage','garasi ke C'],['C Long','jalan panjang ke C'],['C Short','jalan pendek ke C'],['Back C','belakang site C'],['Platform A','atas site A'],['Hell A','bawah site A'],['CT','spawn defender'],['B Site','site tengah kecil']],
+  mirage:[['A Ramp','tanjakan ke A'],['Palace','istana ke A'],['Tetris','box susun A'],['Firebox','box api A'],['CT','penghubung defender'],['Jungle','hutan ke B'],['Connector','penghubung mid-A'],['Top Mid','atas mid'],['Underpass','terowongan bawah'],['B Apartments','apartemen ke B'],['Kitchen','dapur ke B'],['Market','pasar/window B'],['Back B','belakang site B'],['Bench','bangku A']],
+  inferno:[['Banana','jalan pisang ke B'],['Coffins','peti B site'],['CT','spawn/penghubung defender'],['Arch','lengkungan mid'],['Library','perpustakaan'],['Top Mid','atas mid'],['Apartments','apartemen ke A'],['Pit','lubang A site'],['Graveyard','kuburan A'],['Balcony','balkon A'],['Long','jalan panjang'],['Short','jalan pendek'],['Back A','belakang site A'],['Back B','belakang site B']]
+};
+let fq=null, fOk=0, fTot=0;
+function fScore(){ $('flashScore').textContent=`skor: ${fOk}/${fTot}${fTot?` (${(100*fOk/fTot).toFixed(0)}%)`:''}`; }
+$('flashNew').onclick=()=>{
+  const arr=CALLOUTS[$('mapSel').value];
+  fq=arr[Math.floor(Math.random()*arr.length)];
+  $('flashQ').textContent='📍 '+fq[1];
+};
+$('flashFlip').onclick=()=>{ if(fq) $('flashQ').textContent='✅ '+fq[0]; };
+$('flashOk').onclick=()=>{ if(fq){fOk++;fTot++;fScore();$('flashNew').click();} };
+$('flashNo').onclick=()=>{ if(fq){fTot++;fScore();$('flashNew').click();} };
+fScore();
+// ---- 8. reaction ----
+const rc=$('react').getContext('2d');
+let rState='idle', rT0=0, rTO=null, rTimes=load('mh-react',[]);
+function rDraw(msg,col){ rc.fillStyle=col||'#0d1117'; rc.fillRect(0,0,340,160); rc.fillStyle='#e6edf3'; rc.font='bold 16px monospace'; rc.textAlign='center'; rc.fillText(msg,170,85); rc.textAlign='left'; }
+function rAvg(){ return rTimes.length? (rTimes.reduce((a,b)=>a+b,0)/rTimes.length).toFixed(0):'—'; }
+function rRender(msg){ $('reactOut').textContent=(msg||'')+`\n5 terakhir: ${rTimes.slice(-5).join(', ')||'—'} ms\nrata-rata: ${rAvg()} ms (pro <200, bagus <250)`; }
+rDraw('klik MULAI dulu'); rRender('');
+$('reactBtn').onclick=()=>{
+  rTimes=[]; rRender('siap... tunggu HIJAU lalu klik kanvas!');
+  const round=()=>{
+    rState='wait'; rDraw('tunggu...','#7a1f1f');
+    rTO=setTimeout(()=>{ rState='go'; rDraw('KLIK!','#238636'); rT0=performance.now(); }, 800+Math.random()*2500);
+  };
+  $('react').onclick=()=>{
+    if(rState==='wait'){ clearTimeout(rTO); rDraw('kejauhan! klik MULAI lagi'); rState='idle'; return; }
+    if(rState==='go'){ const ms=Math.round(performance.now()-rT0); rTimes.push(ms); save('mh-react',rTimes);
+      rRender(`+${ms} ms ${ms<200?'🔥 pro':ms<250?'👍 bagus':ms<350?'😐 rata2':'🐢 ulangi warmup'}`);
+      if(rTimes.length>=5){ rState='idle'; rDraw('selesai — klik MULAI untuk ulang'); }
+      else round();
+    }
+  };
+  round();
+};
+// ---- 9. tilt ----
+let tiltHist=load('mh-tilt',[]);
+$('tilt').oninput=e=>$('tiltV').textContent=e.target.value;
+function tiltRender(){
+  const t=+$('tilt').value;
+  const saran = t<=2 ? 'Lanjut — catat pola musuh.' : t===3 ? 'Ambil 1 round napas: mute, fokus 1 tugas (crosshair).' : 'STOP 5 menit: berdiri, air, off-screen. Queue lagi kalau turun ke ≤2.';
+  $('tiltOut').textContent=`level ${t}/5 → ${saran}`;
+  $('tiltHist').innerHTML=tiltHist.slice(-8).reverse().map(e=>`<div class="kv"><span>${e.w} — ${e.n||''}</span><b>L${e.t}</b></div>`).join('')||'<small>belum ada entry</small>';
+}
+$('tiltSave').onclick=()=>{ tiltHist.push({t:+$('tilt').value, w:$('tiltWhy').value, n:$('tiltNote').value.trim()}); save('mh-tilt',tiltHist); $('tiltNote').value=''; tiltRender(); };
+tiltRender();
+// ---- 10. warmup generator ----
+const POOL=[['trainer.html spray 20 shots',5],['Deathmatch — crosshair only',10],['Spray guide OFF target avg<30',5],['Counter-strafe 50x kiri-kanan',5],['Reaction test 5x',3],['Callout flashcards 10 kartu',5],['VOD 1 round review',5],['Flick 20x range bots',5]];
+$('wuGen').onclick=()=>{
+  let m=+$('wuMin').value||15; const out=[]; const pool=[...POOL].sort(()=>Math.random()-.5);
+  for(const [n,d] of pool){ if(m<=0)break; if(d<=m+3){ out.push(`• ${n} (~${Math.min(d,m)} mnt)`); m-=d; } }
+  out.push(m>0?`• sisa ${m} mnt: free DM`:'• waktu pas — langsung queue');
+  $('wuOut').textContent=out.join('\n');
+};
+// ---- 11. VOD ----
+let vod=load('mh-vod',[]);
+function vodRender(){
+  $('vodOut').textContent = vod.length? `${vod.length} review tersimpan. Pola terbanyak: ${topVod()}` : '—';
+  $('vodHist').innerHTML = vod.slice(-8).reverse().map(v=>`<div class="kv"><span>${v.r} [${v.c.join(',')}] ${v.f}</span></div>`).join('')||'<small>belum ada review</small>';
+}
+function topVod(){
+  const c={}; vod.forEach(v=>v.c.forEach(x=>c[x]=(c[x]||0)+1));
+  const k=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
+  return k? `${k[0]} (${k[1]}x) — fokus perbaiki ini minggu ini` : '—';
+}
+$('vodSave').onclick=()=>{
+  const cats=[...document.querySelectorAll('.vod:checked')].map(x=>x.value);
+  if(!cats.length){ $('vodOut').textContent='centang minimal 1 kategori.'; return; }
+  vod.push({r:$('vodR').value.trim()||'(tanpa label)', c:cats, f:$('vodFix').value.trim()});
+  save('mh-vod',vod); $('vodR').value=''; $('vodFix').value='';
+  document.querySelectorAll('.vod:checked').forEach(x=>x.checked=false);
+  vodRender();
+};
+$('vodExport').onclick=async()=>{
+  const txt=vod.map((v,i)=>`${i+1}. ${v.r} [${v.c.join(', ')}] → ${v.f}`).join('\n')||'(kosong)';
+  try{ await navigator.clipboard.writeText(txt); $('vodExport').textContent='✅ Copied!'; }catch(e){ prompt('Copy manual:',txt); }
+  setTimeout(()=>$('vodExport').textContent='📋 Copy semua (paste ke notepad)',1500);
+};
+vodRender();
 </script>
 </body>
 </html>
