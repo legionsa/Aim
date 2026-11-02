@@ -1,0 +1,40 @@
+﻿        if key in self.weapons:
+            self.current = key
+            self.load_current()
+            self.save_config()
+
+    def fire_loop(self, delay_ms, mult):
+        self.running = True
+        self.load_current()
+        n = min(self.shots, len(self.deltas))
+        idx = 0
+        last = time.perf_counter()
+        interval = delay_ms / 1000.0
+        while True:
+            with self.lock:
+                if not self.firing or not self.enabled:
+                    break
+            if self.foreground_only:
+                fg = get_foreground()
+                if self.target_exe.lower() not in fg:
+                    time.sleep(0.001)
+                    continue
+            dx, dy = self.deltas[idx]
+            mx = -dx * self.k * mult
+            my = -dy * self.k * mult
+            if self.humanize:
+                mx += random.uniform(-self.jitter_x, self.jitter_x)
+                my += random.uniform(-self.jitter_y, self.jitter_y)
+            # randomized delay
+            d = interval + random.uniform(-0.002, 0.002)
+            if d < 0.001:
+                d = interval
+            move_mouse_rel(mx, my)
+            idx = (idx + 1) % n
+            last += d
+            sleep_time = last - time.perf_counter()
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+            else:
+                last = time.perf_counter()
+        self.running = False

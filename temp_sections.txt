@@ -1,0 +1,17 @@
+﻿powershell : At line:1 char:52
+At line:4 char:1
++ powershell -Command "$c = Get-Content 'macro_m1.py'; for($i=0;$i -lt  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (At line:1 char:52:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
++  = Get-Content 'macro_m1.py'; for(=0; -lt .Count;++){ if([] -match 'c ...
++                                                    ~
+Missing expression after unary operator '++'.
+At line:1 char:59
++  = Get-Content 'macro_m1.py'; for(=0; -lt .Count;++){ if([] -match 'c ...
++                                                           ~
+Missing type name after '['.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
+ 

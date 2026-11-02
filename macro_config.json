@@ -1,0 +1,11 @@
+{
+  "enabled": false,
+  "humanize": true,
+  "jitter_x": 0.0,
+  "jitter_y": 0.0,
+  "delay_ms": 30.0,
+  "weapon": "ak47",
+  "foreground_only": false,
+  "target_exe": "cs2.exe",
+  "toggle_mode": true
+}
