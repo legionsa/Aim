@@ -147,8 +147,8 @@ class Macro:
                 if not self.firing or not self.enabled:
                     break
             dx, dy = self.deltas[idx]
-            mx = -dx * self.k * mult
-            my = -dy * self.k * mult
+            mx = dx * self.k * mult
+            my = dy * self.k * mult
             if self.humanize:
                 mx += random.uniform(-self.jitter_x, self.jitter_x)
                 my += random.uniform(-self.jitter_y, self.jitter_y)

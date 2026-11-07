@@ -1,0 +1,9 @@
+{
+  "version": "1.1.0",
+  "name": "XS2 Optimizer ULTRA",
+  "build": "20251103",
+  "changelog": [
+    "v1.1.0 - Added Versioning, Memory Cleaner, Temp Cleaner, Overlay, Profiles, Input Tester, Game Time Tracker, Network Info, Changelog",
+    "v1.0.0 - Initial ULTRA release with Hardware Monitor, Ping Graph, Priority Manager, Hotkeys, Game Mode, Tweaks, Launcher, CS2 Tools, Focus Mode, Break Timer, Tray"
+  ]
+}
